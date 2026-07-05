@@ -1,0 +1,129 @@
+---
+description: Run this rule when starting a new project that uses the base design system. It scaffolds the folder structure, installs token files, and sets up the override layer.
+globs: 
+alwaysApply: false
+---
+
+# Project Scaffold — Design System Setup
+
+When the user asks to start or scaffold a new project using the design system, follow these steps exactly.
+
+## Step 1: Create Folder Structure
+
+Create the following directory structure:
+
+```
+styles/
+  tokens/
+    base.css              # Base design system tokens (from Figma — read-only)
+    base-components.css   # Component-specific tokens (from Figma — read-only)
+    overrides.css         # Project-specific token overrides
+  base/                   # Base component styles matching Figma design system
+    index.css
+  custom/                 # Project-specific new components
+    index.css
+  main.css                # Entry point — controls import order
+components/
+  base/                   # Base components matching Figma design system
+  custom/                 # Project-specific components
+```
+
+## Step 2: Create `styles/main.css`
+
+The import order is critical — later files override earlier ones:
+
+```css
+@import 'tokens/base.css';
+@import 'tokens/base-components.css';
+@import 'tokens/overrides.css';
+@import 'base/index.css';
+@import 'custom/index.css';
+```
+
+## Step 3: Create `styles/tokens/base.css`
+
+Populate with ALL token values from `DESIGN_SYSTEM.md`. This includes:
+
+- Primitive color ramps (gray, brand, error, warning, success)
+- Semantic color tokens (backgrounds, text, foreground, borders, effects)
+- Typography tokens (font families, weights, sizes, line heights)
+- Spacing scale (none through 11xl)
+- Border radius scale (none through full)
+- Width and container tokens
+- Shadow elevation tokens (xs through 3xl)
+- Backdrop blur tokens
+- Dark mode token overrides inside `.dark { }` selector
+
+Also add `@media (prefers-color-scheme: dark)` as a fallback.
+
+**This file is READ-ONLY after creation. Never modify it for project-specific changes.**
+
+## Step 4: Create `styles/tokens/base-components.css`
+
+Create an empty file with a comment header:
+
+```css
+/* Component-specific tokens from the base design system.
+   Generated from Figma — do not edit manually.
+   Override in overrides.css instead. */
+```
+
+## Step 5: Create `styles/tokens/overrides.css`
+
+Create with a template showing how to override:
+
+```css
+/* Project-Specific Token Overrides
+   ================================
+   Override base design system tokens here.
+   Never modify base.css or base-components.css directly.
+
+   Common overrides:
+   - Brand colors: override --brand-25 through --brand-950
+   - Font family: override --font-family-display and --font-family-body
+   - Specific semantic tokens: override --color-bg-*, --color-text-*, etc.
+*/
+
+:root {
+  /* Add project-specific overrides below */
+}
+
+.dark {
+  /* Add dark mode overrides for any custom tokens */
+}
+```
+
+## Step 6: Create Empty Index Files
+
+**`styles/base/index.css`:**
+```css
+/* Base component styles
+   Import each base component stylesheet here.
+   Example: @import 'button.css'; */
+```
+
+**`styles/custom/index.css`:**
+```css
+/* Custom project-specific component styles
+   Import each custom component stylesheet here.
+   Example: @import 'dashboard-card.css'; */
+```
+
+## Step 7: Copy `DESIGN_SYSTEM.md` to Project Root
+
+If `DESIGN_SYSTEM.md` is not already in the project root, inform the user to copy it from the design-system-tokens repo. This file is the AI's primary reference for token values and conventions.
+
+## Step 8: Verify Setup
+
+After scaffolding, confirm:
+- [ ] All directories exist
+- [ ] `main.css` has correct import order
+- [ ] `base.css` has all token values populated
+- [ ] `overrides.css` has the template structure
+- [ ] `DESIGN_SYSTEM.md` is in the project root
+- [ ] Both `index.css` files exist in `base/` and `custom/`
+
+Report what was created and remind the user:
+- "base.css is read-only — all customizations go in overrides.css"
+- "New components go in styles/custom/ and components/custom/"
+- "Always use token variables, never hardcode values"

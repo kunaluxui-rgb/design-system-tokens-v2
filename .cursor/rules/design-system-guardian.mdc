@@ -1,0 +1,179 @@
+---
+description: Enforces design system consistency, accessibility, and code quality for all frontend work. Automatically applies when editing CSS, component files, or styles.
+globs: "**/*.{css,scss,less,tsx,jsx,vue,svelte,html,astro}"
+alwaysApply: false
+---
+
+# Design System Guardian
+
+This rule enforces consistency with the base design system, accessibility standards, and frontend best practices. Apply these rules to ALL frontend code.
+
+## Rule 1: Always Use Design Tokens
+
+### Colors
+- NEVER hardcode color values (hex, rgb, hsl) in component styles.
+- ALWAYS use semantic CSS custom properties: `var(--color-bg-primary)`, `var(--color-text-secondary)`, etc.
+- Use SEMANTIC tokens (`--color-bg-*`, `--color-text-*`, `--color-fg-*`, `--color-border-*`), not primitives (`--gray-500`, `--brand-600`).
+- Exception: Primitive tokens are acceptable ONLY inside `overrides.css` when redefining semantic tokens.
+
+### Spacing
+- NEVER hardcode spacing values (margin, padding, gap) as raw pixels or rems.
+- ALWAYS use spacing tokens: `var(--spacing-xs)`, `var(--spacing-md)`, `var(--spacing-3xl)`, etc.
+- Spacing scale: none(0), xxs(2), xs(4), sm(6), md(8), lg(12), xl(16), 2xl(20), 3xl(24), 4xl(32), 5xl(40), 6xl(48), 7xl(64), 8xl(80), 9xl(96), 10xl(128), 11xl(160).
+
+### Border Radius
+- NEVER hardcode border-radius values.
+- ALWAYS use radius tokens: `var(--radius-sm)`, `var(--radius-md)`, `var(--radius-full)`, etc.
+- Scale: none(0), xxs(2), xs(4), sm(6), md(8), lg(10), xl(12), 2xl(16), 3xl(20), 4xl(24), full(9999).
+
+### Typography
+- ALWAYS use typography tokens for font-family, font-size, font-weight, and line-height.
+- `var(--font-family-display)` for headings, `var(--font-family-body)` for body text.
+- `var(--font-weight-regular)` (400), `--font-weight-medium` (500), `--font-weight-semibold` (600), `--font-weight-bold` (700).
+- Font sizes: `var(--font-size-text-sm)`, `var(--font-size-display-lg)`, etc.
+- Line heights: `var(--line-height-text-sm)`, `var(--line-height-display-lg)`, etc.
+
+### Shadows
+- NEVER hardcode box-shadow values.
+- ALWAYS use shadow tokens: `var(--shadow-xs)` through `var(--shadow-3xl)`.
+- Elevation guide: xs=inputs, sm=cards, md=tooltips, lg=modals, xl=overlays, 2xl=popovers, 3xl=showcases.
+
+## Rule 2: Dark Mode Compliance
+
+- Every component MUST work in both light and dark mode without additional CSS.
+- This happens automatically WHEN you use semantic tokens (`--color-bg-*`, `--color-text-*`, etc.).
+- If you hardcode a color, dark mode WILL break. This is why Rule 1 exists.
+- If a component needs a color that doesn't exist as a token, add a new semantic token to `overrides.css` with both `:root` and `.dark` values.
+- Test by toggling the `.dark` class on the root element.
+
+## Rule 3: Accessibility Standards
+
+### Color Contrast
+- Normal text (below 18px/14px bold): minimum 4.5:1 contrast ratio (WCAG AA).
+- Large text (18px+ or 14px+ bold): minimum 3:1 contrast ratio.
+- UI components and graphical objects: minimum 3:1 contrast ratio against adjacent colors.
+- The semantic token system is pre-tested for contrast. If you use `--color-text-primary` on `--color-bg-primary`, contrast is guaranteed. If you mix tokens in unusual ways, verify manually.
+
+### Interactive Elements
+- All interactive elements (buttons, links, inputs) MUST have visible focus styles.
+- Use the focus ring tokens: `--color-focus-ring` (brand) and `--color-focus-ring-error` (error states).
+- Focus styles must be visible in both light and dark modes.
+- Standard focus style: `outline: 2px solid var(--color-focus-ring); outline-offset: 2px;`
+- Never use `outline: none` without providing an alternative visible focus indicator.
+
+### Keyboard Navigation
+- All interactive elements must be reachable via Tab key.
+- Use semantic HTML elements (`<button>`, `<a>`, `<input>`) instead of `<div>` with click handlers.
+- If you must use a non-semantic element, add `tabindex="0"`, `role`, and keyboard event handlers (Enter/Space).
+- Dropdown menus and modals must trap focus and support Escape to close.
+
+### ARIA and Semantic HTML
+- Use semantic HTML elements first: `<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`, `<header>`, `<footer>`.
+- Add `aria-label` or `aria-labelledby` to navigation landmarks, modals, and form groups.
+- Icon-only buttons MUST have `aria-label` describing the action.
+- Form inputs MUST have associated `<label>` elements (via `for`/`id` or wrapping).
+- Images must have meaningful `alt` text, or `alt=""` for decorative images.
+- Use `aria-live="polite"` for dynamic content updates (toasts, alerts, loading states).
+- Use `aria-expanded` on toggles/dropdowns, `aria-selected` on tabs, `aria-current="page"` on active nav items.
+
+### Motion and Animation
+- Respect `prefers-reduced-motion`. Wrap animations in:
+  ```css
+  @media (prefers-reduced-motion: no-preference) {
+    .element { transition: transform 0.2s ease; }
+  }
+  ```
+- Never auto-play animations that flash more than 3 times per second.
+- Provide a mechanism to pause/stop any animation that lasts longer than 5 seconds.
+
+### Touch Targets
+- Minimum interactive touch target size: 44x44px (WCAG 2.5.5).
+- If the visible element is smaller (e.g., a small icon button), use padding or `min-width`/`min-height` to meet the target size.
+
+## Rule 4: File Organization
+
+### Where Files Go
+- Base component styles (matching Figma): `styles/base/[component].css`
+- Custom project components: `styles/custom/[component].css`
+- Base component markup: `components/base/[Component].*`
+- Custom component markup: `components/custom/[Component].*`
+- Token overrides: `styles/tokens/overrides.css`
+- NEVER modify `styles/tokens/base.css` or `styles/tokens/base-components.css`.
+
+### Naming Conventions
+- CSS files: `kebab-case.css` (e.g., `dashboard-card.css`)
+- Component files: `PascalCase` (e.g., `DashboardCard.tsx`)
+- CSS classes: `kebab-case` with BEM (e.g., `.dashboard-card`, `.dashboard-card__title`, `.dashboard-card--sm`)
+- Custom token variables: `--[category]-[name]` (e.g., `--color-bg-custom-surface`)
+
+### When Adding New Files
+- Add CSS imports to the appropriate `index.css` file (`base/index.css` or `custom/index.css`).
+- Never import component CSS directly in a component file — always through the index.
+
+## Rule 5: Component Patterns
+
+### Size Variants
+When a component has size variants, use the standard scale: `sm`, `md`, `lg`, `xl`, `2xl`.
+Implement as BEM modifiers: `.button--sm`, `.button--lg`.
+
+### State Handling
+Standard states: `default`, `hover`, `focus`, `active`, `disabled`.
+- Hover: use `--*-hover` tokens when available, otherwise lighten/darken by one step.
+- Disabled: use `--color-bg-disabled`, `--color-text-disabled`, `--color-border-disabled`. Add `cursor: not-allowed` and `pointer-events: none`.
+- Focus: always apply focus ring (see Accessibility).
+
+### Hierarchy Variants
+For components with visual weight levels: `primary`, `secondary`, `tertiary`, `link`.
+- Primary: `--color-bg-brand-solid` background, white text.
+- Secondary: `--color-bg-primary` background, brand-colored border.
+- Tertiary: transparent background, brand-colored text.
+- Link: no background/border, brand-colored text with underline.
+
+### Semantic Color Variants
+For status-indicating components (alerts, badges, tags): `brand`, `gray`, `error`, `warning`, `success`.
+
+## Rule 6: Responsive Design
+
+- Build mobile-first. Default styles target mobile.
+- Standard breakpoints:
+  ```css
+  /* Tablet */
+  @media (min-width: 768px) { }
+  /* Desktop */
+  @media (min-width: 1024px) { }
+  /* Wide desktop */
+  @media (min-width: 1280px) { }
+  ```
+- Use container tokens for max-width: `var(--container-max-width)` with `var(--container-padding-desktop)` / `var(--container-padding-mobile)`.
+- Limit paragraph width with `max-width: var(--width-paragraph-max)` for readability.
+- Test layouts at 320px, 768px, 1024px, and 1440px widths.
+
+## Rule 7: Performance
+
+- Prefer CSS custom properties over Sass/Less variables for runtime theming.
+- Use `transition` on specific properties, never `transition: all`.
+- Avoid `!important` — it breaks the token cascade. If needed, fix the specificity instead.
+- Prefer `gap` over margin-based spacing in flex/grid layouts.
+- Use `will-change` sparingly and only on elements that actually animate.
+
+## Rule 8: Code Review Checklist
+
+Before completing any frontend task, verify:
+
+- [ ] No hardcoded colors — all colors use semantic tokens
+- [ ] No hardcoded spacing — all spacing uses spacing tokens
+- [ ] No hardcoded border-radius — all radii use radius tokens
+- [ ] No hardcoded typography — all fonts use typography tokens
+- [ ] No hardcoded shadows — all shadows use shadow tokens
+- [ ] Dark mode works (semantic tokens used throughout)
+- [ ] Focus styles are visible on all interactive elements
+- [ ] All images have alt text
+- [ ] All form inputs have labels
+- [ ] Icon-only buttons have aria-label
+- [ ] Touch targets are at least 44x44px
+- [ ] Animations respect prefers-reduced-motion
+- [ ] Component renders correctly at 320px and 1440px
+- [ ] New files are in the correct directory (base/ vs custom/)
+- [ ] CSS imports are added to the appropriate index.css
+- [ ] No `!important` usage
+- [ ] No `outline: none` without an alternative focus indicator
